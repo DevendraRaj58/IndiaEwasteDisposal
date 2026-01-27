@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>India E-Waste Map - Project Presentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #0a0f1a 0%, #1a2332 100%);
+            color: #f1f5f9;
+            line-height: 1.6;
+        }
+
+        .slide {
+            min-height: 100vh;
+            padding: 60px 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-bottom: 2px solid rgba(16, 185, 129, 0.3);
+            page-break-after: always;
+        }
+
+        .slide-number {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #10b981, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #10b981;
+            margin-bottom: 2rem;
+            border-bottom: 3px solid #10b981;
+            padding-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #3b82f6;
+            margin: 1.5rem 0 1rem;
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            color: #94a3b8;
+            margin-bottom: 2rem;
+        }
+
+        ul {
+            list-style: none;
+            margin-left: 1rem;
+        }
+
+        li {
+            font-size: 1.3rem;
+            margin: 0.8rem 0;
+            padding-left: 2rem;
+            position: relative;
+        }
+
+        li::before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+        }
+
+        .highlight {
+            color: #10b981;
+            font-weight: 500;
+        }
+
+        .blue {
+            color: #3b82f6;
+        }
+
+        .orange {
+            color: #fb8c00;
+        }
+
+        .red {
+            color: #e53935;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            margin-top: 2rem;
+        }
+
+        .card {
+            background: rgba(26, 35, 50, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .card h3 {
+            margin-top: 0;
+        }
+
+        .tech-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid #10b981;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin: 0.3rem;
+            color: #10b981;
+        }
+
+        .tech-badge.blue {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .tech-badge.orange {
+            background: rgba(251, 140, 0, 0.15);
+            border-color: #fb8c00;
+            color: #fb8c00;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-right: 0.5rem;
+        }
+
+        .two-col {
+            display: flex;
+            gap: 4rem;
+        }
+
+        .two-col>div {
+            flex: 1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        th {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .big-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+        }
+
+        .ai-section {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .quote {
+            font-size: 1.4rem;
+            font-style: italic;
+            color: #94a3b8;
+            border-left: 4px solid #10b981;
+            padding-left: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .demo-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            background: #10b981;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+            vertical-align: middle;
+        }
+
+        .future-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            background: #64748b;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+            vertical-align: middle;
+        }
+
+        @media print {
+            .slide {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Slide 1: Title -->
+    <div class="slide center">
+        <div class="big-icon">🇮🇳♻️</div>
+        <h1>India E-Waste Map</h1>
+        <p class="subtitle">Interactive Platform for E-Waste Disposal Location Management</p>
+        <div style="margin-top: 3rem;">
+            <span class="tech-badge">Python</span>
+            <span class="tech-badge">Flask</span>
+            <span class="tech-badge blue">JavaScript</span>
+            <span class="tech-badge blue">Leaflet.js</span>
+            <span class="tech-badge orange">SQLite</span>
+        </div>
+        <p style="margin-top: 3rem; color: #64748b;">Project Presentation | January 2026</p>
+    </div>
+
+    <!-- Slide 2: Problem Statement -->
+    <div class="slide">
+        <h2>🎯 Problem Statement</h2>
+        <div class="grid">
+            <div>
+                <h3>The Challenge</h3>
+                <ul>
+                    <li>India generates <span class="highlight">3.2 million tonnes</span> of e-waste annually</li>
+                    <li>Only <span class="red">22%</span> is formally recycled</li>
+                    <li>Citizens struggle to find <span class="blue">authorized disposal centres</span></li>
+                    <li>No centralized platform for discovering locations</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Our Solution</h3>
+                <ul>
+                    <li>Interactive <span class="highlight">map-based</span> discovery platform</li>
+                    <li>Community-driven location <span class="blue">reporting</span></li>
+                    <li>Category-based filtering by <span class="orange">e-waste type</span></li>
+                    <li>Real-time status updates (operational/shutdown)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: Technology Stack -->
+    <div class="slide">
+        <h2>🛠️ Technology Stack</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>Backend</h3>
+                <p><span class="tech-badge">Python 3.11</span></p>
+                <p><span class="tech-badge">Flask 3.0</span></p>
+                <p><span class="tech-badge">SQLAlchemy</span></p>
+                <p><span class="tech-badge">Flask-CORS</span></p>
+                <ul style="margin-top: 1rem;">
+                    <li>RESTful API architecture</li>
+                    <li>SQLite for development</li>
+                    <li>PostgreSQL-ready for production</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Frontend</h3>
+                <p><span class="tech-badge blue">JavaScript ES6+</span></p>
+                <p><span class="tech-badge blue">Leaflet.js 1.9</span></p>
+                <p><span class="tech-badge blue">HTML5 / CSS3</span></p>
+                <ul style="margin-top: 1rem;">
+                    <li>Interactive map interface</li>
+                    <li>Responsive dark theme UI</li>
+                    <li>OpenStreetMap tiles</li>
+                </ul>
+            </div>
+        </div>
+        <div class="grid" style="margin-top: 2rem;">
+            <div class="card">
+                <h3>External Services (Free)</h3>
+                <p><span class="tech-badge orange">OpenStreetMap</span></p>
+                <p><span class="tech-badge orange">Nominatim Geocoding</span></p>
+                <p><span class="tech-badge orange">Google Maps Directions</span></p>
+            </div>
+            <div class="card">
+                <h3>DevOps (Production-Ready)</h3>
+                <p><span class="tech-badge">Docker</span></p>
+                <p><span class="tech-badge">Docker Compose</span></p>
+                <p><span class="tech-badge">Gunicorn WSGI</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Features - Live Demo -->
+    <div class="slide">
+        <h2>✅ Features - Live Demo</h2>
+        <p class="subtitle">Features demonstrated in today's presentation</p>
+
+        <div class="two-col">
+            <div>
+                <h3>🗺️ Interactive Map</h3>
+                <ul>
+                    <li>OpenStreetMap with detailed POIs</li>
+                    <li>Pan/zoom restricted to India</li>
+                    <li>India boundary overlay</li>
+                </ul>
+
+                <h3>📍 Marker Management</h3>
+                <ul>
+                    <li>Add new disposal locations</li>
+                    <li>Progressive geocoding (State → City → Locality)</li>
+                    <li>Click-to-place marker on map</li>
+                </ul>
+
+                <h3>🎨 Category System</h3>
+                <ul>
+                    <li><span class="red">Red</span> - Large appliances (fridge, AC)</li>
+                    <li><span class="orange">Orange</span> - Small appliances (TV, fan)</li>
+                    <li><span class="blue">Blue</span> - Phones, laptops, parts</li>
+                </ul>
+            </div>
+            <div>
+                <h3>📋 Marker Popup Features</h3>
+                <ul>
+                    <li>View location details</li>
+                    <li>Copy contact to clipboard</li>
+                    <li>Get directions via Google Maps</li>
+                    <li>Mark as shutdown / operational</li>
+                </ul>
+
+                <h3>⚙️ Status Management</h3>
+                <ul>
+                    <li>Edit button (pencil icon) on markers</li>
+                    <li>Shutdown disposal centres</li>
+                    <li>Reactivate closed centres</li>
+                    <li>Visual feedback (grey = shutdown)</li>
+                </ul>
+
+                <h3>🌙 UI/UX</h3>
+                <ul>
+                    <li>Dark theme with glassmorphism</li>
+                    <li>Toast notifications</li>
+                    <li>Side panel form (not modal)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Features - Production Ready -->
+    <div class="slide">
+        <h2>🚀 Features - Production Ready</h2>
+        <p class="subtitle">Additional capabilities for deployment (not demoed locally)</p>
+
+        <div class="grid">
+            <div class="card">
+                <h3>🐳 Docker Deployment</h3>
+                <ul>
+                    <li>Multi-stage Dockerfile for optimization</li>
+                    <li>Docker Compose with PostgreSQL</li>
+                    <li>Health checks built-in</li>
+                    <li>Non-root user for security</li>
+                </ul>
+                <p style="margin-top: 1rem; color: #64748b;">
+                    <code>docker compose up -d</code>
+                </p>
+            </div>
+            <div class="card">
+                <h3>🗄️ Database Options</h3>
+                <ul>
+                    <li><strong>Development:</strong> SQLite (local file)</li>
+                    <li><strong>Production:</strong> PostgreSQL 15</li>
+                    <li>Automatic schema migration</li>
+                    <li>Persistent volume storage</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>🌐 Geocoding Options</h3>
+                <ul>
+                    <li><strong>Development:</strong> Nominatim (free)</li>
+                    <li><strong>Production:</strong> Mapbox API</li>
+                    <li>100,000 free requests/month</li>
+                    <li>Configurable via environment</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>🔒 Security Features</h3>
+                <ul>
+                    <li>CORS configuration</li>
+                    <li>Input validation</li>
+                    <li>Coordinate bounds checking</li>
+                    <li>Prepared for HTTPS/TLS</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 6: API Endpoints -->
+    <div class="slide">
+        <h2>📡 API Architecture</h2>
+        <p class="subtitle">RESTful API Endpoints</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="tech-badge blue">GET</span></td>
+                    <td><code>/</code></td>
+                    <td>Main application page</td>
+                    <td><span class="demo-badge">DEMO</span></td>
+                </tr>
+                <tr>
+                    <td><span class="tech-badge blue">GET</span></td>
+                    <td><code>/api/markers</code></td>
+                    <td>Fetch all markers</td>
+                    <td><span class="demo-badge">DEMO</span></td>
+                </tr>
+                <tr>
+                    <td><span class="tech-badge">POST</span></td>
+                    <td><code>/api/markers</code></td>
+                    <td>Create new marker</td>
+                    <td><span class="demo-badge">DEMO</span></td>
+                </tr>
+                <tr>
+                    <td><span class="tech-badge orange">PUT</span></td>
+                    <td><code>/api/markers/{id}/shutdown</code></td>
+                    <td>Mark as shutdown</td>
+                    <td><span class="demo-badge">DEMO</span></td>
+                </tr>
+                <tr>
+                    <td><span class="tech-badge orange">PUT</span></td>
+                    <td><code>/api/markers/{id}/reactivate</code></td>
+                    <td>Mark as operational</td>
+                    <td><span class="demo-badge">DEMO</span></td>
+                </tr>
+                <tr>
+                    <td><span class="tech-badge red">DELETE</span></td>
+                    <td><code>/api/markers/{id}</code></td>
+                    <td>Delete marker</td>
+                    <td><span class="future-badge">READY</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Slide 7: Project Structure -->
+    <div class="slide">
+        <h2>📁 Project Structure</h2>
+
+        <div class="two-col">
+            <div>
+                <h3>File Organization</h3>
+                <pre
+                    style="background: #1a2332; padding: 1.5rem; border-radius: 10px; font-size: 1rem; line-height: 1.8;">
+IndiaEwasteDisposal/
+├── <span class="highlight">app.py</span>              # Flask application
+├── <span class="highlight">models.py</span>           # Database models
+├── <span class="blue">requirements.txt</span>    # Dependencies
+├── <span class="orange">Dockerfile</span>          # Container config
+├── <span class="orange">docker-compose.yml</span>  # Multi-container
+├── README.md           # Documentation
+│
+├── templates/
+│   └── <span class="highlight">index.html</span>      # Main UI
+│
+├── static/
+│   ├── css/<span class="blue">styles.css</span>  # Dark theme
+│   ├── js/<span class="blue">map.js</span>       # Leaflet logic
+│   └── data/india.geojson
+│
+└── tests/
+    └── test_api.py     # Pytest suite
+      </pre>
+            </div>
+            <div>
+                <h3>Lines of Code</h3>
+                <table>
+                    <tr>
+                        <td><code>app.py</code></td>
+                        <td>~300 lines</td>
+                    </tr>
+                    <tr>
+                        <td><code>models.py</code></td>
+                        <td>~115 lines</td>
+                    </tr>
+                    <tr>
+                        <td><code>map.js</code></td>
+                        <td>~1000 lines</td>
+                    </tr>
+                    <tr>
+                        <td><code>styles.css</code></td>
+                        <td>~1000 lines</td>
+                    </tr>
+                    <tr>
+                        <td><code>index.html</code></td>
+                        <td>~150 lines</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Total</strong></td>
+                        <td><strong>~2500+ lines</strong></td>
+                    </tr>
+                </table>
+
+                <h3 style="margin-top: 2rem;">Key Libraries</h3>
+                <ul>
+                    <li><span class="highlight">Flask</span> - Web framework</li>
+                    <li><span class="highlight">SQLAlchemy</span> - ORM</li>
+                    <li><span class="blue">Leaflet.js</span> - Interactive maps</li>
+                    <li><span class="orange">Nominatim</span> - Geocoding</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 8: AI-Assisted Development -->
+    <div class="slide">
+        <h2>🤖 AI-Assisted Development</h2>
+
+        <div class="ai-section">
+            <h3 style="margin-top: 0;">Development Approach</h3>
+            <p class="quote">
+                "We leveraged AI coding assistants to accelerate development in domains where we lacked deep expertise,
+                enabling us to build a production-quality application in significantly less time."
+            </p>
+        </div>
+
+        <div class="grid" style="margin-top: 2rem;">
+            <div>
+                <h3>Areas Where AI Helped</h3>
+                <ul>
+                    <li><span class="highlight">Frontend Design</span> - CSS animations, glassmorphism</li>
+                    <li><span class="highlight">Leaflet.js Integration</span> - Map configuration, custom markers</li>
+                    <li><span class="highlight">Docker Setup</span> - Multi-stage builds, compose files</li>
+                    <li><span class="highlight">API Design</span> - RESTful patterns, validation</li>
+                    <li><span class="highlight">Geocoding</span> - Nominatim/Mapbox integration</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Benefits Realized</h3>
+                <ul>
+                    <li>⚡ <span class="blue">Faster development</span> - Hours instead of days</li>
+                    <li>📚 <span class="blue">Learning opportunity</span> - Understood new technologies</li>
+                    <li>🎨 <span class="blue">Better design</span> - Professional UI/UX</li>
+                    <li>🔧 <span class="blue">Best practices</span> - Security, code structure</li>
+                    <li>📝 <span class="blue">Documentation</span> - README, comments</li>
+                </ul>
+            </div>
+        </div>
+
+        <p style="margin-top: 2rem; color: #94a3b8; text-align: center;">
+            AI tools used as a <strong>collaborative assistant</strong>, not a replacement for understanding the code.
+        </p>
+    </div>
+
+    <!-- Slide 9: Future Enhancements -->
+    <div class="slide">
+        <h2>🔮 Future Enhancements</h2>
+
+        <div class="grid">
+            <div class="card">
+                <h3>🔐 User Authentication</h3>
+                <ul>
+                    <li>Login/Register system</li>
+                    <li>Admin panel for moderation</li>
+                    <li>User-submitted locations need approval</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>📊 Analytics Dashboard</h3>
+                <ul>
+                    <li>E-waste collection statistics</li>
+                    <li>Most active disposal centres</li>
+                    <li>Regional coverage maps</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>📱 Mobile App</h3>
+                <ul>
+                    <li>React Native / Flutter version</li>
+                    <li>GPS-based nearby search</li>
+                    <li>Push notifications</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>🏢 Business Features</h3>
+                <ul>
+                    <li>Pickup scheduling</li>
+                    <li>Integration with recyclers</li>
+                    <li>Environmental impact calculator</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 10: Demo -->
+    <div class="slide center">
+        <div class="big-icon">🎬</div>
+        <h1>Live Demo</h1>
+        <p class="subtitle">Let's see the application in action!</p>
+
+        <div style="margin-top: 3rem;">
+            <p style="font-size: 1.5rem; color: #10b981;">
+                <strong>http://localhost:5000</strong>
+            </p>
+        </div>
+
+        <div style="margin-top: 3rem; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto;">
+            <h3>Demo Flow:</h3>
+            <ol style="list-style: decimal; padding-left: 2rem;">
+                <li style="margin: 1rem 0;">View existing markers on map</li>
+                <li style="margin: 1rem 0;">Click marker → View details, copy contact, get directions</li>
+                <li style="margin: 1rem 0;">Add new location via side panel</li>
+                <li style="margin: 1rem 0;">Shutdown a marker → See it turn grey</li>
+                <li style="margin: 1rem 0;">Reactivate the marker → Color restored</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Slide 11: Thank You -->
+    <div class="slide center">
+        <div class="big-icon">🙏</div>
+        <h1>Thank You!</h1>
+        <p class="subtitle">Questions & Discussion</p>
+
+        <div style="margin-top: 3rem;">
+            <p style="font-size: 1.2rem; color: #94a3b8;">
+                Project Repository: <span class="highlight">IndiaEwasteDisposal/</span>
+            </p>
+        </div>
+
+        <div style="margin-top: 3rem;">
+            <span class="tech-badge">Python</span>
+            <span class="tech-badge">Flask</span>
+            <span class="tech-badge blue">JavaScript</span>
+            <span class="tech-badge blue">Leaflet.js</span>
+            <span class="tech-badge orange">SQLite</span>
+            <span class="tech-badge">Docker</span>
+        </div>
+
+        <p style="margin-top: 4rem; color: #64748b;">
+            Built with 💚 for India's e-waste management
+        </p>
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Interactive map for finding and reporting e-waste disposal locations across India">
+  <meta name="theme-color" content="#0a0f1a">
+  
+  <title>India E-Waste Map | Find E-Waste Disposal Locations</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+        crossorigin="">
+  
+  <!-- App CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- ================================================================== -->
+    <!-- Top Bar -->
+    <!-- ================================================================== -->
+    <header class="top-bar" role="banner">
+      <div class="app-logo">
+        <!-- Recycle Icon -->
+        <svg class="app-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5"/>
+          <path d="M11 19h8.203a1.83 1.83 0 0 0 1.556-.89 1.784 1.784 0 0 0 0-1.775l-1.226-2.12"/>
+          <path d="m14 16-3 3 3 3"/>
+          <path d="M8.293 13.596 4.875 9.5l1.458-2.525"/>
+          <path d="m14 5-3-3-3 3"/>
+          <path d="M5.867 6.953 4.837 8.88"/>
+          <path d="M12 19V5"/>
+          <path d="m19.133 6.953 1.03 1.927"/>
+          <path d="M15.707 13.596 19.125 9.5l-1.458-2.525"/>
+        </svg>
+        <div>
+          <h1 class="app-title">India E-Waste Map</h1>
+          <span class="app-subtitle">Find & report disposal locations</span>
+        </div>
+      </div>
+      
+      <button id="btn-add-location" class="btn btn-primary" aria-haspopup="dialog">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+        Add Location
+      </button>
+    </header>
+    
+    <!-- ================================================================== -->
+    <!-- Map Container -->
+    <!-- ================================================================== -->
+    <main class="map-container" role="main">
+      <div id="map" aria-label="Interactive map of India showing e-waste disposal locations"></div>
+      
+      <!-- Legend -->
+      <aside class="map-legend" role="complementary" aria-label="Map legend">
+        <div class="legend-title">E-Waste Categories</div>
+        <div class="legend-items">
+          <div class="legend-item">
+            <span class="legend-dot large" aria-hidden="true"></span>
+            <span>Large appliances</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot small" aria-hidden="true"></span>
+            <span>Small appliances</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot devices" aria-hidden="true"></span>
+            <span>Phones & laptops</span>
+          </div>
+        </div>
+      </aside>
+      
+      <!-- Instruction Banner -->
+      <div id="instruction-banner" class="instruction-banner" role="status" aria-live="polite"></div>
+    </main>
+    
+    <!-- ================================================================== -->
+    <!-- Add Location Modal -->
+    <!-- ================================================================== -->
+    <div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal">
+        <header class="modal-header">
+          <h2 id="modal-title" class="modal-title">Add E-Waste Location</h2>
+          <button id="modal-close" class="modal-close" aria-label="Close dialog">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M18 6 6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </header>
+        
+        <div class="modal-body">
+          <form id="marker-form" novalidate>
+            <!-- State Field -->
+            <div class="form-group">
+              <label class="form-label" for="input-state">State</label>
+              <input 
+                type="text" 
+                id="input-state" 
+                class="form-input" 
+                placeholder="e.g., Maharashtra" 
+                autocomplete="address-level1"
+                aria-describedby="state-help"
+                required
+              >
+              <div id="state-help" class="form-help">Press Enter to search and zoom</div>
+            </div>
+            
+            <!-- City Field -->
+            <div class="form-group">
+              <label class="form-label" for="input-city">City</label>
+              <input 
+                type="text" 
+                id="input-city" 
+                class="form-input" 
+                placeholder="e.g., Pune" 
+                autocomplete="address-level2"
+                aria-describedby="city-help"
+                required
+              >
+              <div id="city-help" class="form-help">Press Enter to search and zoom</div>
+            </div>
+            
+            <!-- Locality Field -->
+            <div class="form-group">
+              <label class="form-label" for="input-locality">Locality / Area</label>
+              <input 
+                type="text" 
+                id="input-locality" 
+                class="form-input" 
+                placeholder="e.g., Kothrud" 
+                autocomplete="address-level3"
+                aria-describedby="locality-help"
+                required
+              >
+              <div id="locality-help" class="form-help">Press Enter, then click on map to place marker</div>
+            </div>
+            
+            <!-- Category Dropdown -->
+            <div class="form-group">
+              <label class="form-label" for="input-category">Category</label>
+              <div class="category-with-preview">
+                <div class="category-select-wrapper">
+                  <select id="input-category" class="form-select" required>
+                    <option value="large">Large household appliances (fridge, AC)</option>
+                    <option value="small">Small appliances (TVs, ovens, fans)</option>
+                    <option value="devices">Mobile phones, laptops, parts</option>
+                  </select>
+                </div>
+                <span id="category-preview" class="category-preview visible" style="background-color: #e53935; color: #e53935;" aria-hidden="true"></span>
+              </div>
+            </div>
+            
+            <!-- Contact Field -->
+            <div class="form-group">
+              <label class="form-label" for="input-contact">Contact</label>
+              <input 
+                type="text" 
+                id="input-contact" 
+                class="form-input" 
+                placeholder="Phone number or email"
+                autocomplete="tel"
+                required
+              >
+            </div>
+          </form>
+        </div>
+        
+        <footer class="modal-footer">
+          <button type="button" id="btn-cancel" class="btn">Cancel</button>
+          <button type="button" id="btn-save" class="btn btn-primary">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            Save Location
+          </button>
+        </footer>
+      </div>
+    </div>
+    
+    <!-- ================================================================== -->
+    <!-- Toast Container -->
+    <!-- ================================================================== -->
+    <div id="toast-container" class="toast-container" role="region" aria-label="Notifications"></div>
+    
+  </div>
+  
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+          crossorigin=""></script>
+  
+  <!-- App Configuration (passed from Flask) -->
+  <script>
+    window.APP_CONFIG = {
+      geocoder: "{{ geocoder }}",
+      geocoderApiKey: "{{ geocoder_api_key }}"
+    };
+  </script>
+  
+  <!-- App JS -->
+  <script src="{{ url_for('static', filename='js/map.js') }}"></script>
+</body>
+</html>

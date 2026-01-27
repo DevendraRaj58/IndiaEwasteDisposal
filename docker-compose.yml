@@ -1,0 +1,55 @@
+# ============================================================================
+# Docker Compose for India E-Waste Map
+# ============================================================================
+# Runs Flask app with PostgreSQL database
+
+services:
+  # Flask application
+  app:
+    build: .
+    container_name: ewaste-app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      # PostgreSQL connection string
+      - DATABASE_URL=postgresql://ewaste_user:ewaste_pass@db:5432/ewaste_db
+      # Geocoder configuration
+      - GEOCODER=nominatim
+      # Uncomment and set for Mapbox (recommended for production)
+      # - GEOCODER=mapbox
+      # - GEOCODER_API_KEY=your_mapbox_token_here
+      - FLASK_DEBUG=False
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - ewaste-network
+
+  # PostgreSQL database
+  db:
+    image: postgres:15-alpine
+    container_name: ewaste-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=ewaste_user
+      - POSTGRES_PASSWORD=ewaste_pass
+      - POSTGRES_DB=ewaste_db
+    volumes:
+      # Persist database data
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ewaste_user -d ewaste_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - ewaste-network
+
+networks:
+  ewaste-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

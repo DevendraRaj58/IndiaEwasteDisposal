@@ -1,0 +1,25 @@
+{
+  "type": "FeatureCollection",
+  "name": "india_boundary",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "India",
+        "note": "This is a simplified placeholder boundary. For production, replace with authoritative GeoJSON from Natural Earth, GADM, or geoBoundaries."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [68.1766451354, 7.9655347559],
+            [97.4025614766, 7.9655347559],
+            [97.4025614766, 35.4940095078],
+            [68.1766451354, 35.4940095078],
+            [68.1766451354, 7.9655347559]
+          ]
+        ]
+      }
+    }
+  ]
+}
