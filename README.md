@@ -1,6 +1,6 @@
 # India E-Waste Map 🇮🇳♻️
 
-An interactive web application for mapping e-waste disposal locations across India. Users can view existing locations and add new ones, with automatic geocoding and category-based marker colors.
+An interactive web application for mapping e-waste disposal locations across India. Features role-based authentication — **Admins** can add, edit, and manage disposal locations; **Users** can view the map, contact info, and get directions.
 
 ![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
 ![Flask](https://img.shields.io/badge/Flask-3.0-green.svg)
@@ -8,6 +8,7 @@ An interactive web application for mapping e-waste disposal locations across Ind
 
 ## Features
 
+- 🟢 **Role-based authentication** — Admin and User roles with login/logout
 - 🗺️ **Interactive Leaflet map** centered on India with panning/zoom restrictions
 - 📍 **Progressive geocoding** — enter State → City → Locality, map zooms with each entry
 - 🎨 **Color-coded markers** for 3 e-waste categories:
@@ -50,9 +51,34 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Open your browser at **http://localhost:5000**
+Open your browser at **http://localhost:5000** — you’ll be redirected to the login page.
 
-Two demo markers in Pune are automatically created on first run!
+Two demo markers in Pune and default user accounts are created on first run.
+
+---
+
+## Authentication
+
+The app uses **Flask-Login** for session-based authentication with two roles:
+
+| Role | Username | Password | Permissions |
+|------|----------|----------|-------------|
+| **Admin** | `admin` | `admin123` | View map, add locations, edit/shutdown/reactivate markers, delete markers |
+| **User** | `user` | `user123` | View map, see contact info, get directions, view legend |
+
+> ⚠️ **These are demo credentials for development/testing only.** Change the passwords or add new users via the database for production.
+
+### Role Differences
+
+| Feature | Admin | User |
+|---------|:-----:|:----:|
+| View map & markers | ✅ | ✅ |
+| See legend (color categories) | ✅ | ✅ |
+| Copy contact to clipboard | ✅ | ✅ |
+| Get directions (Google Maps) | ✅ | ✅ |
+| Add new locations | ✅ | ❌ |
+| Shutdown / Reactivate markers | ✅ | ❌ |
+| Delete markers | ✅ | ❌ |
 
 ---
 
@@ -100,6 +126,7 @@ docker run -p 5000:5000 \
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `DATABASE_URL` | `sqlite:///ewaste.db` | Database connection string |
+| `SECRET_KEY` | `dev-secret-key-...` | Flask secret key for sessions (change in production!) |
 | `GEOCODER` | `nominatim` | Geocoding service (`nominatim` or `mapbox`) |
 | `GEOCODER_API_KEY` | _(empty)_ | API key for Mapbox geocoding |
 | `PORT` | `5000` | Server port |
@@ -186,12 +213,17 @@ The included `static/data/india.geojson` is a simplified placeholder. For produc
 
 ## API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/` | Main HTML page |
-| `GET` | `/api/markers` | Get all markers (JSON) |
-| `POST` | `/api/markers` | Create a new marker |
-| `DELETE` | `/api/markers/<id>` | Delete a marker |
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/login` | ❌ | Login page |
+| `POST` | `/login` | ❌ | Authenticate user |
+| `GET` | `/logout` | ✅ | Logout and redirect |
+| `GET` | `/` | ✅ | Main map page |
+| `GET` | `/api/markers` | ✅ | Get all markers (JSON) |
+| `POST` | `/api/markers` | ✅ Admin | Create a new marker |
+| `PUT` | `/api/markers/<id>/shutdown` | ✅ Admin | Mark as shut down |
+| `PUT` | `/api/markers/<id>/reactivate` | ✅ Admin | Reactivate marker |
+| `DELETE` | `/api/markers/<id>` | ✅ Admin | Delete a marker |
 
 ### POST /api/markers
 
@@ -278,19 +310,20 @@ location /api/ {
 
 ```
 IndiaEwasteDisposal/
-├── app.py              # Flask application & API routes
-├── models.py           # SQLAlchemy models & seed logic
+├── app.py              # Flask app, routes, auth & API
+├── models.py           # SQLAlchemy models (User, Marker) & seed logic
 ├── requirements.txt    # Python dependencies
 ├── Dockerfile          # Docker build configuration
 ├── docker-compose.yml  # Multi-container deployment
 ├── README.md           # This file
 ├── templates/
-│   └── index.html      # Main HTML template
+│   ├── login.html      # Login page template
+│   └── index.html      # Main map template (role-aware)
 ├── static/
 │   ├── css/
-│   │   └── styles.css  # Custom dark theme styles
+│   │   └── styles.css  # Dark theme + login page styles
 │   ├── js/
-│   │   └── map.js      # Leaflet map & form logic
+│   │   └── map.js      # Leaflet map & role-aware UI logic
 │   └── data/
 │       └── india.geojson  # India boundary (placeholder)
 └── tests/

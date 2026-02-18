@@ -1,16 +1,47 @@
 """
 models.py - SQLAlchemy database models for India E-Waste Map
 
-This module defines the Marker model for storing e-waste disposal locations
-and includes seed logic to populate demo data on first run.
+This module defines the Marker and User models for storing e-waste disposal
+locations and user accounts, and includes seed logic for first-run setup.
 """
 
 import random
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Initialize SQLAlchemy instance (will be bound to Flask app in app.py)
 db = SQLAlchemy()
+
+
+class User(UserMixin, db.Model):
+    """
+    User model for authentication and role-based access control.
+
+    Roles:
+        'admin' - Full access: add, edit, shutdown, reactivate, delete markers
+        'user'  - Read-only: view map, contact info, directions, legend
+    """
+    __tablename__ = 'users'
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    role = db.Column(db.String(20), nullable=False, default='user')
+
+    def set_password(self, password):
+        """Hash and store the password."""
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        """Verify a password against the stored hash."""
+        return check_password_hash(self.password_hash, password)
+
+    @property
+    def is_admin(self):
+        """Check if the user has admin role."""
+        return self.role == 'admin'
 
 
 class Marker(db.Model):
@@ -113,4 +144,25 @@ def seed_demo_markers(app):
                 db.session.add(marker)
             
             db.session.commit()
-            print("✓ Seeded 2 demo markers in Pune")
+            print("[OK] Seeded 2 demo markers in Pune")
+
+
+def seed_users(app):
+    """
+    Seed database with default admin and user accounts if no users exist.
+
+    Default credentials (DEMO ONLY):
+        admin / admin123
+        user  / user123
+    """
+    with app.app_context():
+        if User.query.count() == 0:
+            admin = User(username='admin', role='admin')
+            admin.set_password('admin123')
+
+            user = User(username='user', role='user')
+            user.set_password('user123')
+
+            db.session.add_all([admin, user])
+            db.session.commit()
+            print("[OK] Seeded default users (admin, user)")

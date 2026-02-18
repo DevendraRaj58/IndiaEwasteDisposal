@@ -2,6 +2,7 @@
 app.py - Flask application for India E-Waste Map
 
 Main entry point for the web application. Provides routes for:
+- User authentication (login/logout) with role-based access
 - Serving the main UI page
 - CRUD API endpoints for e-waste markers
 - Static file serving for GeoJSON data
@@ -11,18 +12,21 @@ Configuration via environment variables:
 - GEOCODER: Geocoding service ('nominatim' or 'mapbox')
 - GEOCODER_API_KEY: API key for Mapbox (if using)
 - PORT: Server port (default: 5000)
+- SECRET_KEY: Flask secret key for sessions
 """
 
 import os
-from flask import Flask, render_template, request, jsonify
+from functools import wraps
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from flask_cors import CORS
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from dotenv import load_dotenv
 
 # Load environment variables from .env file if present
 load_dotenv()
 
 # Import database models
-from models import db, Marker, init_db, seed_demo_markers
+from models import db, Marker, User, init_db, seed_demo_markers, seed_users
 
 
 def create_app():
@@ -34,6 +38,9 @@ def create_app():
     
     # Enable CORS for API endpoints (useful for development)
     CORS(app)
+    
+    # Secret key for sessions (required by Flask-Login)
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
     
     # Database configuration
     # Uses DATABASE_URL env var for production (Postgres), falls back to SQLite
@@ -53,15 +60,43 @@ def create_app():
     # Initialize database with app
     db.init_app(app)
     
-    # Create tables and seed demo data
+    # Initialize Flask-Login
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+    login_manager.login_view = 'login'
+    
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+    
+    # Create tables and seed data
     init_db(app)
     seed_demo_markers(app)
+    seed_users(app)
     
     return app
 
 
 # Create the application instance
 app = create_app()
+
+
+# ============================================================================
+# Admin-only decorator
+# ============================================================================
+
+def admin_required(f):
+    """
+    Decorator that requires the current user to be an admin.
+    Returns 403 if the user is not an admin.
+    Must be used AFTER @login_required.
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_admin:
+            return jsonify({'error': 'Admin access required'}), 403
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 # ============================================================================
@@ -110,26 +145,73 @@ def is_point_in_india(lat, lng):
 
 
 # ============================================================================
-# Routes
+# Authentication Routes
+# ============================================================================
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """
+    Login page and authentication handler.
+    GET: Serve login form
+    POST: Authenticate user credentials
+    """
+    # If already logged in, go to map
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        
+        user = User.query.filter_by(username=username).first()
+        
+        if user and user.check_password(password):
+            login_user(user)
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid username or password', 'error')
+    
+    return render_template('login.html')
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    """Log out the current user and redirect to login."""
+    logout_user()
+    return redirect(url_for('login'))
+
+
+# ============================================================================
+# Main Page Route
 # ============================================================================
 
 @app.route('/')
+@login_required
 def index():
     """
     Serve the main UI page.
-    Passes geocoder configuration to the frontend template.
+    Passes geocoder configuration and user role to the frontend template.
     """
     return render_template(
         'index.html',
         geocoder=app.config['GEOCODER'],
-        geocoder_api_key=app.config['GEOCODER_API_KEY']
+        geocoder_api_key=app.config['GEOCODER_API_KEY'],
+        user_role=current_user.role,
+        username=current_user.username
     )
 
 
+# ============================================================================
+# API Routes
+# ============================================================================
+
 @app.route('/api/markers', methods=['GET'])
+@login_required
 def get_markers():
     """
     Get all e-waste markers.
+    Available to all authenticated users (admin and user roles).
     
     Returns:
         JSON array of all markers with their details
@@ -139,9 +221,11 @@ def get_markers():
 
 
 @app.route('/api/markers', methods=['POST'])
+@login_required
+@admin_required
 def create_marker():
     """
-    Create a new e-waste marker.
+    Create a new e-waste marker. Admin only.
     
     Expected JSON body:
     {
@@ -157,6 +241,7 @@ def create_marker():
     Returns:
         201: Created marker data
         400: Validation error
+        403: Not admin
     """
     data = request.get_json()
     
@@ -207,9 +292,11 @@ def create_marker():
 
 
 @app.route('/api/markers/<int:marker_id>', methods=['DELETE'])
+@login_required
+@admin_required
 def delete_marker(marker_id):
     """
-    Delete a marker by ID.
+    Delete a marker by ID. Admin only.
     
     Args:
         marker_id: ID of the marker to delete
@@ -230,9 +317,11 @@ def delete_marker(marker_id):
 
 
 @app.route('/api/markers/<int:marker_id>/shutdown', methods=['PUT'])
+@login_required
+@admin_required
 def shutdown_marker(marker_id):
     """
-    Mark a disposal centre as shut down.
+    Mark a disposal centre as shut down. Admin only.
     
     Args:
         marker_id: ID of the marker to shutdown
@@ -254,9 +343,11 @@ def shutdown_marker(marker_id):
 
 
 @app.route('/api/markers/<int:marker_id>/reactivate', methods=['PUT'])
+@login_required
+@admin_required
 def reactivate_marker(marker_id):
     """
-    Mark a disposal centre as operational again.
+    Mark a disposal centre as operational again. Admin only.
     
     Args:
         marker_id: ID of the marker to reactivate

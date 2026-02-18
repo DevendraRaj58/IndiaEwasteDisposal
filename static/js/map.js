@@ -62,6 +62,7 @@ const CONFIG = {
 // Get geocoder config from page (injected by Flask)
 const GEOCODER = window.APP_CONFIG?.geocoder || 'nominatim';
 const GEOCODER_API_KEY = window.APP_CONFIG?.geocoderApiKey || '';
+const USER_ROLE = window.APP_CONFIG?.userRole || 'user';
 
 
 // ============================================================================
@@ -250,36 +251,48 @@ function addMarkerToMap(data) {
  */
 function createPopupContent(data) {
   const isActive = data.is_active !== false;
+  const isAdmin = USER_ROLE === 'admin';
 
   // Google Maps directions URL (FREE - no API key needed)
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${data.lat},${data.lng}`;
 
-  // If marker is shut down, show different content with reactivate option
+  // If marker is shut down, show different content
   if (!isActive) {
-    return `
+    let shutdownHtml = `
       <div class="popup-content popup-shutdown">
         <div class="popup-shutdown-badge">⚠️ SHUT DOWN</div>
         <div class="popup-title">${escapeHtml(data.locality)}</div>
         <div class="popup-address">${escapeHtml(data.city)}, ${escapeHtml(data.state)}</div>
-        <div class="popup-shutdown-message">This disposal centre has been shut down and is no longer operational.</div>
+        <div class="popup-shutdown-message">This disposal centre has been shut down and is no longer operational.</div>`;
+
+    if (isAdmin) {
+      shutdownHtml += `
         <button class="popup-reactivate-btn" onclick="reactivateMarker(${data.id})">
           ✅ Mark as Operational
-        </button>
-      </div>
-    `;
+        </button>`;
+    }
+
+    shutdownHtml += `</div>`;
+    return shutdownHtml;
   }
 
-  // Active marker - show full controls with edit button
-  return `
+  // Active marker
+  let popupHtml = `
     <div class="popup-content">
       <div class="popup-header">
-        <div class="popup-title">${escapeHtml(data.locality)}</div>
+        <div class="popup-title">${escapeHtml(data.locality)}</div>`;
+
+  if (isAdmin) {
+    popupHtml += `
         <button class="popup-edit-btn" onclick="showShutdownConfirm(${data.id})" title="Edit marker" aria-label="Edit marker">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
           </svg>
-        </button>
+        </button>`;
+  }
+
+  popupHtml += `
       </div>
       <div class="popup-address">${escapeHtml(data.city)}, ${escapeHtml(data.state)}</div>
       <div class="popup-actions">
@@ -306,15 +319,20 @@ function createPopupContent(data) {
           </svg>
           Directions
         </a>
-      </div>
+      </div>`;
+
+  if (isAdmin) {
+    popupHtml += `
       <div id="shutdown-confirm-${data.id}" class="popup-shutdown-confirm" style="display: none;">
         <div class="shutdown-confirm-text">Mark as shut down?</div>
         <button class="shutdown-confirm-btn" onclick="shutdownMarker(${data.id})">
           ⚠️ Disposal Centre Shut Down
         </button>
-      </div>
-    </div>
-  `;
+      </div>`;
+  }
+
+  popupHtml += `</div>`;
+  return popupHtml;
 }
 
 
@@ -976,31 +994,49 @@ document.addEventListener('DOMContentLoaded', () => {
   initMap();
 
   // Set up event listeners
-  document.getElementById('btn-add-location').addEventListener('click', openModal);
-  document.getElementById('modal-close').addEventListener('click', closeModal);
-  document.getElementById('btn-cancel').addEventListener('click', closeModal);
-  document.getElementById('btn-save').addEventListener('click', submitForm);
+  const addBtn = document.getElementById('btn-add-location');
+  if (addBtn) addBtn.addEventListener('click', openModal);
 
-  // Address field enter handlers
-  document.getElementById('input-state').addEventListener('keydown', e => handleAddressKeydown('state', e));
-  document.getElementById('input-city').addEventListener('keydown', e => handleAddressKeydown('city', e));
-  document.getElementById('input-locality').addEventListener('keydown', e => handleAddressKeydown('locality', e));
+  const modalCloseBtn = document.getElementById('modal-close');
+  if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeModal);
+
+  const cancelBtn = document.getElementById('btn-cancel');
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+  const saveBtn = document.getElementById('btn-save');
+  if (saveBtn) saveBtn.addEventListener('click', submitForm);
+
+  // Address field enter handlers (only exist for admin)
+  const stateInput = document.getElementById('input-state');
+  if (stateInput) stateInput.addEventListener('keydown', e => handleAddressKeydown('state', e));
+
+  const cityInput = document.getElementById('input-city');
+  if (cityInput) cityInput.addEventListener('keydown', e => handleAddressKeydown('city', e));
+
+  const localityInput = document.getElementById('input-locality');
+  if (localityInput) localityInput.addEventListener('keydown', e => handleAddressKeydown('locality', e));
 
   // Contact field enter handler (submits form)
-  document.getElementById('input-contact').addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      submitForm();
-    } else if (e.key === 'Escape') {
-      closeModal();
-    }
-  });
+  const contactInput = document.getElementById('input-contact');
+  if (contactInput) {
+    contactInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        submitForm();
+      } else if (e.key === 'Escape') {
+        closeModal();
+      }
+    });
+  }
 
   // Category change handler
-  document.getElementById('input-category').addEventListener('change', e => {
-    updateCategoryPreview(e.target.value);
-    state.formData.category = e.target.value;
-  });
+  const categorySelect = document.getElementById('input-category');
+  if (categorySelect) {
+    categorySelect.addEventListener('change', e => {
+      updateCategoryPreview(e.target.value);
+      state.formData.category = e.target.value;
+    });
+  }
 
   // Global keyboard handler
   document.addEventListener('keydown', handleGlobalKeydown);
